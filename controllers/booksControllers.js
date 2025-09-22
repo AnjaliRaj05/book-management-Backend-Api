@@ -2,27 +2,37 @@ const bookService = require('../services/bookService');
 
 exports.getAllBooks = async (req, res) => {
   try {
-    const { title, author, category, page = 1, limit = 10 } = req.query;
-
-    // Build filters
+    const { search, genre, status, page = 1, limit = 10 } = req.query;
     const filters = {};
-    if (title) filters.title = { $regex: title, $options: 'i' };
-    if (author) filters.author = { $regex: author, $options: 'i' };
-    if (category) filters.category = { $regex: category, $options: 'i' };
+    if (search) {
+      filters.$or = [
+        { title: { $regex: search, $options: 'i' } },
+        { author: { $regex: search, $options: 'i' } }
+      ];
+    }
+    if (genre) filters.genre = { $regex: genre, $options: 'i' };
+    if (status) filters.status = status;
 
-    const { books, totalBooks } = await bookService.getAllBooksService(filters, page, limit);
+    const { books, totalBooks } = await bookService.getAllBooksService(
+      filters,
+      page,
+      limit
+    );
+
     return res.status(200).json({
-      message: books.length ? 'Fetched all books successfully' : 'No books found',
+      message: books.length ? "Fetched all books successfully" : "No books found",
       total: totalBooks,
       currentPage: parseInt(page, 10),
       books,
     });
   } catch (err) {
-    console.error('Error in getAllBooks:', err);
-    return res.status(500).json({ message: 'Error fetching books', error: err.message });
+    console.error("Error in getAllBooks:", err);
+    return res.status(500).json({
+      message: "Error fetching books",
+      error: err.message,
+    });
   }
 };
-
 
 
 exports.getByID = async (req, res) => {
